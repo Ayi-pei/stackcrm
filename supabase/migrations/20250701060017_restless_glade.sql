@@ -1,4 +1,4 @@
--- 云聚CRM数据库架构
+-- 云聚CRM数据库架构-PostgreSQL
 -- 创建时间: 2024年12月
 -- 版本: 1.0.0
 
@@ -49,7 +49,6 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE,
     avatar_url TEXT,
     role_id UUID REFERENCES roles(id),
     status VARCHAR(20) DEFAULT 'offline' CHECK (status IN ('online', 'busy', 'break', 'offline', 'training')),
@@ -95,7 +94,6 @@ CREATE TABLE IF NOT EXISTS key_usage_logs (
 CREATE TABLE IF NOT EXISTS customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100),
-    email VARCHAR(255),
     avatar_url TEXT,
     phone VARCHAR(20),
     ip_address INET,
@@ -240,7 +238,8 @@ CREATE INDEX IF NOT EXISTS idx_key_usage_logs_key_id ON key_usage_logs(key_id);
 CREATE INDEX IF NOT EXISTS idx_key_usage_logs_user_id ON key_usage_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_key_usage_logs_created_at ON key_usage_logs(created_at);
 
-CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+-- 删除email索引，因为相应字段已移除
+-- CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
 CREATE INDEX IF NOT EXISTS idx_customers_is_online ON customers(is_online);
 CREATE INDEX IF NOT EXISTS idx_customers_is_blacklisted ON customers(is_blacklisted);
 
@@ -360,11 +359,10 @@ BEGIN
     -- 获取超级管理员角色ID
     SELECT id INTO admin_role_id FROM roles WHERE name = 'super_admin';
     
-    -- 创建管理员用户
-    INSERT INTO users (name, email, role_id, access_key, key_expires_at, status) 
+    -- 创建管理员用户（移除email字段）
+    INSERT INTO users (name, role_id, access_key, key_expires_at, status) 
     VALUES (
         '系统管理员', 
-        'admin@system.com', 
         admin_role_id, 
         'adminayi888', 
         CURRENT_TIMESTAMP + INTERVAL '10 years',

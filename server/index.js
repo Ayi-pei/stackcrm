@@ -1,6 +1,4 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: path.resolve(__dirname, './.env') }); // 明确指定路径
-
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -10,6 +8,13 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// 首先初始化 __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 现在可以安全地使用 __dirname 加载环境变量
+dotenv.config({ path: path.resolve(__dirname, './.env') });
 
 // 路由导入
 import authRoutes from './routes/auth.js';
@@ -22,16 +27,10 @@ import agentSettingsRoutes from './routes/agentSettings.js';
 
 // 中间件导入
 import { errorHandler } from './middleware/errorHandler.js';
-import { rateLimiter } from './middleware/rateLimiter.js';
+import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
 
 // Socket处理器导入
 import { setupSocketHandlers } from './socket/handlers.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// 加载环境变量
-dotenv.config();
 
 const app = express();
 const server = createServer(app);
@@ -55,7 +54,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 速率限制
-app.use(rateLimiter);
+app.use(rateLimiterMiddleware);
 
 // 静态文件服务
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -67,7 +66,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/keys', keyRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/agent-settings', agentSettingsRoutes);
+app.use('/api/agentSettings', agentSettingsRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
