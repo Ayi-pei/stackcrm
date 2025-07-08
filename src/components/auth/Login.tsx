@@ -3,15 +3,13 @@ import { Form, Input, Button, Card, message, Alert } from 'antd';
 import { Key, Shield, User } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
-import { useAdminStore } from '../../stores/adminStore';
 
 // 当前登录页
 export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [loginType, setLoginType] = useState<'unknown' | 'admin' | 'agent'>('unknown');
-  const { login } = useAuthStore();
-  const { validateKey } = useAdminStore();
+  const { login, loading: authLoading, error: authError } = useAuthStore();
   const navigate = useNavigate();
 
   // 检测输入类型
@@ -40,51 +38,20 @@ export const Login: React.FC = () => {
     setLoading(true);
     
     try {
+      await login(inputValue);
+      
+      message.success('登录成功');
+      
+      // 根据登录类型跳转
       if (inputValue === 'adminayi888') {
-        // 管理员登录
-        const adminData = {
-          id: 'admin-001',
-          name: '系统管理员',
-          email: 'admin@system.com',
-          role: 'super_admin',
-          isOnline: true,
-          lastActiveAt: new Date()
-        };
-
-        const token = 'admin-jwt-token';
-        login(adminData, token);
-        message.success('管理员登录成功');
         navigate('/admin/dashboard');
-        
-      } else if (inputValue.match(/^[a-z0-9]{12,16}$/)) {
-        // 坐席密钥登录
-        const isValidKey = await validateKey(inputValue);
-        
-        if (isValidKey) {
-          // 模拟根据密钥获取坐席信息
-          const agentData = {
-            id: 'agent-' + inputValue.slice(-4),
-            name: '客服坐席',
-            email: 'agent@example.com',
-            role: 'agent',
-            isOnline: true,
-            lastActiveAt: new Date(),
-            accessKey: inputValue
-          };
-
-          const token = 'agent-jwt-token';
-          login(agentData, token);
-          message.success('坐席登录成功');
-          navigate('/agent-chat');
-        } else {
-          throw new Error('密钥无效或已过期');
-        }
       } else {
-        throw new Error('输入格式不正确');
+        navigate('/agent-chat');
       }
       
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '登录失败');
+      const errorMessage = error instanceof Error ? error.message : '登录失败';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -196,7 +163,7 @@ export const Login: React.FC = () => {
             <Button
               type="primary"
               htmlType="submit"
-              loading={loading}
+              loading={loading || authLoading}
               className={`w-full transition-all duration-300 ${
                 loginType === 'admin' 
                   ? 'bg-gradient-to-r from-red-600 to-orange-600 border-0 hover:from-red-700 hover:to-orange-700' 
@@ -207,10 +174,16 @@ export const Login: React.FC = () => {
               size="large"
               disabled={!inputValue.trim()}
             >
-              {loading ? '验证中...' : '登录'}
+              {(loading || authLoading) ? '验证中...' : '登录'}
             </Button>
           </Form.Item>
         </Form>
+        
+        {authError && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{authError}</p>
+          </div>
+        )}
 
         <div className="mt-6 text-center text-sm text-gray-500 space-y-2">
           <div className="border-t pt-4">

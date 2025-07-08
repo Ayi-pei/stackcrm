@@ -41,6 +41,7 @@ export const AgentSettings: React.FC = () => {
   const [qrCodeVisible, setQrCodeVisible] = useState(false);
   const [keyValidating, setKeyValidating] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [shortLinkLoading, setShortLinkLoading] = useState(false);
 
   // 模拟当前密钥信息 - 使用naoiod格式，默认48小时有效期
   const [currentKey, setCurrentKey] = useState({
@@ -99,10 +100,7 @@ export const AgentSettings: React.FC = () => {
       const baseUrl = window.location.origin;
       const link = `${baseUrl}/chat/${user.id}`;
       setAgentLink(link);
-      
-      // 生成短链
-      const shortId = Math.random().toString(36).substring(2, 8);
-      setShortLink(`${baseUrl}/s/${shortId}`);
+      generateShortLink(link);
     }
 
     // 设置表单初始值
@@ -154,11 +152,32 @@ export const AgentSettings: React.FC = () => {
   };
 
   // 重新生成短链
+  const generateShortLink = async (longUrl: string) => {
+    setShortLinkLoading(true);
+    
+    try {
+      const response = await api.shortlinks.create(longUrl, user?.id);
+      
+      if (response.success && response.data) {
+        setShortLink(response.data.shortUrl);
+        if (!agentLink) {
+          message.success('短链已生成');
+        }
+      } else {
+        throw new Error(response.message || '短链生成失败');
+      }
+    } catch (error) {
+      console.error('Generate short link error:', error);
+      message.error('短链生成失败，请稍后重试');
+    } finally {
+      setShortLinkLoading(false);
+    }
+  };
+  
   const regenerateShortLink = () => {
-    const shortId = Math.random().toString(36).substring(2, 8);
-    const newShortLink = `${window.location.origin}/s/${shortId}`;
-    setShortLink(newShortLink);
-    message.success('短链已重新生成');
+    if (agentLink) {
+      generateShortLink(agentLink);
+    }
   };
 
   // 验证新密钥
@@ -650,6 +669,7 @@ export const AgentSettings: React.FC = () => {
                         <Button
                           icon={<RefreshCw size={16} />}
                           onClick={regenerateShortLink}
+                         loading={shortLinkLoading}
                         />
                       </Tooltip>
                     </div>

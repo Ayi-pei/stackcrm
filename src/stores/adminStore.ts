@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { KeyInfo, KeyUsageLog, DailyStats, AdminDashboardData, KeyGenerationOptions } from '../types/admin';
+import { api } from '../utils/api';
 
 interface AdminState {
   // Keys management
@@ -30,7 +31,7 @@ interface AdminState {
   refreshDashboard: () => void;
   
   // Key generation
-  generateKey: (options: KeyGenerationOptions) => Promise<KeyInfo>;
+  generateKey: (options: KeyGenerationOptions) => Promise<void>;
   validateKey: (key: string) => Promise<boolean>;
   
   // Utilities
@@ -108,93 +109,57 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setDashboardData: (data) => set({ dashboardData: data }),
   
   refreshDashboard: async () => {
-    const { keys, usageLogs } = get();
+    set({ loading: true });
     
-    // Calculate today's stats
-    const today = new Date().toISOString().split('T')[0];
-    const todayLogs = usageLogs.filter(log => 
-      log.timestamp.toISOString().split('T')[0] === today
-    );
-    
-    const todayStats: DailyStats = {
-      date: today,
-      totalKeys: keys.length,
-      activeKeys: keys.filter(k => k.status === 'active').length,
-      expiredKeys: keys.filter(k => k.status === 'expired').length,
-      newKeys: keys.filter(k => 
-        k.createdAt.toISOString().split('T')[0] === today
-      ).length,
-      totalUsage: todayLogs.length,
-      onlineAgents: keys.filter(k => k.isOnline).length,
-      totalSessions: keys.reduce((sum, k) => sum + k.sessionCount, 0)
-    };
-    
-    // Get expiring keys (within 7 days)
-    const expiringKeys = get().getExpiringKeys(7);
-    
-    // Calculate top agents
-    const topAgents = keys
-      .filter(k => k.type === 'agent' && k.agentName)
-      .map(k => ({
-        agentId: k.agentId!,
-        agentName: k.agentName!,
-        sessionCount: k.sessionCount,
-        onlineTime: k.isOnline ? 8 : 0, // Mock data
-        satisfaction: Math.random() * 2 + 3 // Mock 3-5 rating
-      }))
-      .sort((a, b) => b.sessionCount - a.sessionCount)
-      .slice(0, 5);
-    
-    const dashboardData: AdminDashboardData = {
-      todayStats,
-      recentLogs: usageLogs.slice(0, 10),
-      expiringKeys,
-      topAgents
-    };
-    
-    set({ dashboardData });
+    try {
+      const response = await api.admin.getDashboard();
+      
+      if (response.success && response.data) {
+        set({ 
+          dashboardData: response.data,
+          loading: false,
+          error: null
+        });
+      } else {
+        throw new Error(response.message || '获取仪表盘数据失败');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '获取仪表盘数据失败';
+      set({ 
+        loading: false, 
+        error: errorMessage 
+      });
+      throw error;
+    }
   },
   
-  generateKey: async (options: KeyGenerationOptions): Promise<KeyInfo> => {
-    // 生成naoiod格式密钥
-    const key = generateNaoiodKey(options.type);
+  generateKey: async (options: KeyGenerationOptions): Promise<void> => {
+    set({ loading: true });
     
-    const newKey: KeyInfo = {
-      id: Date.now().toString(),
-      key,
-      type: options.type,
-      status: 'active',
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + options.validityDays * 24 * 60 * 60 * 1000),
-      agentId: options.agentId,
-      usageCount: 0,
-      maxUsage: options.maxUsage,
-      isOnline: false,
-      sessionCount: 0,
-      totalSessions: 0,
-      createdBy: 'admin',
-      notes: options.notes
-    };
-    
-    get().addKey(newKey);
-    return newKey;
+    try {
+      const response = await api.keys.generate(options);
+      
+      if (response.success && response.data) {
+        get().addKey(response.data);
+        set({ loading: false, error: null });
+      } else {
+        throw new Error(response.message || '密钥生成失败');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '密钥生成失败';
+      set({ loading: false, error: errorMessage });
+      throw error;
+    }
   },
   
   validateKey: async (key: string): Promise<boolean> => {
-    // 首先验证格式
-    if (!validateNaoiodFormat(key)) {
+    try {
+      const response = await api.auth.validateKey(key);
+      return response.success && response.data?.isValid === true;
+    } catch (error) {
+      console.error('Key validation error:', error);
       return false;
     }
-    
-    const { keys } = get();
-    const keyInfo = keys.find(k => k.key === key);
-    
-    if (!keyInfo) return false;
-    if (keyInfo.status !== 'active') return false;
-    if (keyInfo.expiresAt < new Date()) return false;
-    if (keyInfo.maxUsage && keyInfo.usageCount >= keyInfo.maxUsage) return false;
-    
-    return true;
   },
   
   getKeysByStatus: (status) => {

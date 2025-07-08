@@ -24,6 +24,7 @@ import agentRoutes from './routes/agents.js';
 import keyRoutes from './routes/keys.js';
 import uploadRoutes from './routes/upload.js';
 import agentSettingsRoutes from './routes/agentSettings.js';
+import shortlinksRoutes from './routes/shortlinks.js';
 
 // 中间件导入
 import { errorHandler } from './middleware/errorHandler.js';
@@ -67,6 +68,7 @@ app.use('/api/agents', agentRoutes);
 app.use('/api/keys', keyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/agentSettings', agentSettingsRoutes);
+app.use('/api/shortlinks', shortlinksRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
@@ -75,6 +77,28 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// 短链接重定向处理
+app.get('/s/:shortId', async (req, res) => {
+  try {
+    const { shortId } = req.params;
+    
+    const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:3001'}/api/shortlinks/resolve/${shortId}`);
+    
+    if (!response.ok) {
+      return res.status(404).send('短链接不存在或已失效');
+    }
+    
+    const data = await response.json();
+    
+    // 302重定向到原始URL
+    res.redirect(302, data.data.originalUrl);
+    
+  } catch (error) {
+    console.error('Short link redirect error:', error);
+    res.status(500).send('服务器错误');
+  }
 });
 
 // Socket.IO处理

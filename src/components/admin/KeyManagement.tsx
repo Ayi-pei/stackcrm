@@ -69,90 +69,11 @@ export const KeyManagement: React.FC = () => {
   const [showKeyValues, setShowKeyValues] = useState<string[]>([]);
   const [form] = Form.useForm();
   const [generateForm] = Form.useForm();
-  const [dataInitialized, setDataInitialized] = useState(false);
 
-  // 初始化模拟数据 - 只执行一次
   useEffect(() => {
-    if (keys.length === 0 && !dataInitialized) {
-      // 生成一些模拟密钥数据 - 使用naoiod格式，确保唯一性
-      const mockKeys: KeyInfo[] = [
-        {
-          id: 'key-001',
-          key: 'naoiod123abc456def',
-          type: 'agent',
-          status: 'active',
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          lastUsedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          agentId: 'agent-001',
-          agentName: '张小明',
-          usageCount: 156,
-          isOnline: true,
-          sessionCount: 3,
-          totalSessions: 89,
-          createdBy: 'admin',
-          notes: '主要负责售前咨询'
-        },
-        {
-          id: 'key-002',
-          key: 'naoiod789xyz123ghi',
-          type: 'agent',
-          status: 'expiring_soon',
-          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-          expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-          lastUsedAt: new Date(Date.now() - 30 * 60 * 1000),
-          agentId: 'agent-002',
-          agentName: '李小红',
-          usageCount: 234,
-          isOnline: true,
-          sessionCount: 2,
-          totalSessions: 145,
-          createdBy: 'admin',
-          notes: '售后服务专员'
-        },
-        {
-          id: 'key-003',
-          key: 'naoiod456jkl789mno',
-          type: 'agent',
-          status: 'expired',
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-          expiresAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          lastUsedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-          agentId: 'agent-003',
-          agentName: '王大华',
-          usageCount: 89,
-          isOnline: false,
-          sessionCount: 0,
-          totalSessions: 67,
-          createdBy: 'admin',
-          notes: '技术支持'
-        },
-        {
-          id: 'key-004',
-          key: 'adminayi888',
-          type: 'admin',
-          status: 'active',
-          createdAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
-          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-          lastUsedAt: new Date(Date.now() - 10 * 60 * 1000),
-          usageCount: 45,
-          isOnline: true,
-          sessionCount: 0,
-          totalSessions: 0,
-          createdBy: 'system',
-          notes: '超级管理员密钥'
-        }
-      ];
-      
-      // 使用 setTimeout 来模拟异步加载，并确保只执行一次
-      setTimeout(() => {
-        mockKeys.forEach(key => {
-          useAdminStore.getState().addKey(key);
-        });
-        setDataInitialized(true);
-      }, 100);
-    }
-  }, [keys.length, dataInitialized]);
+    // Load keys data on component mount
+    refreshDashboard();
+  }, [refreshDashboard]);
 
   // 过滤数据 - 确保去重
   const filteredKeys = React.useMemo(() => {

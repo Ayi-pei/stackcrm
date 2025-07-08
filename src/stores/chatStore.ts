@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Customer, ChatMessage, ChatSession, QuickReply, AgentSettings, FileUpload, WelcomeMessage } from '../types/chat';
+import { api } from '../utils/api';
 
 interface ChatState {
   // Customers and sessions
@@ -53,6 +54,12 @@ interface ChatState {
   
   // Connection
   setConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => void;
+  
+  // API integration
+  loadCustomers: () => Promise<void>;
+  loadSessions: () => Promise<void>;
+  loadAgentSettings: (agentId: string) => Promise<void>;
+  saveAgentSettings: (agentId: string, settings: Partial<AgentSettings>) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -231,5 +238,55 @@ export const useChatStore = create<ChatState>((set, get) => ({
     fileUploads: state.fileUploads.filter(upload => upload.id !== id)
   })),
   
-  setConnectionStatus: (status) => set({ connectionStatus: status })
+  setConnectionStatus: (status) => set({ connectionStatus: status }),
+  
+  // API integration methods
+  loadCustomers: async () => {
+    try {
+      const response = await api.chat.getCustomers();
+      
+      if (response.success && response.data) {
+        set({ customers: response.data });
+      }
+    } catch (error) {
+      console.error('Load customers error:', error);
+    }
+  },
+  
+  loadSessions: async () => {
+    try {
+      const response = await api.chat.getSessions();
+      
+      if (response.success && response.data) {
+        set({ sessions: response.data });
+      }
+    } catch (error) {
+      console.error('Load sessions error:', error);
+    }
+  },
+  
+  loadAgentSettings: async (agentId: string) => {
+    try {
+      const response = await api.agentSettings.get(agentId);
+      
+      if (response.success && response.data) {
+        set({ agentSettings: response.data.settings });
+      }
+    } catch (error) {
+      console.error('Load agent settings error:', error);
+    }
+  },
+  
+  saveAgentSettings: async (agentId: string, settings: Partial<AgentSettings>) => {
+    try {
+      const response = await api.agentSettings.update(agentId, settings);
+      
+      if (response.success && response.data) {
+        set({ agentSettings: response.data });
+      }
+    } catch (error) {
+      console.error('Save agent settings error:', error);
+      throw error;
+    }
+  }
 }));

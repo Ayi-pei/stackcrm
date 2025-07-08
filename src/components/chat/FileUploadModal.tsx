@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, File, Image, Music, Archive } from 'lucide-react';
+import { api } from '../../utils/api';
+import { message } from 'antd';
 
 interface FileUploadModalProps {
   onUpload: (files: File[]) => void;
@@ -59,7 +61,37 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ onUpload, onCl
 
   const handleUpload = () => {
     if (selectedFiles.length > 0) {
+      handleFileUploads();
+    }
+  };
+  
+  const handleFileUploads = async () => {
+    try {
+      const uploadPromises = selectedFiles.map(async (file) => {
+        const response = await api.upload.file(file, sessionId);
+        
+        if (response.success && response.data) {
+          return {
+            file,
+            url: response.data.fileUrl,
+            id: response.data.id
+          };
+        } else {
+          throw new Error(`文件 ${file.name} 上传失败`);
+        }
+      });
+      
+      const results = await Promise.all(uploadPromises);
+      
+      // 调用父组件的回调
       onUpload(selectedFiles);
+      
+      message.success(`成功上传 ${results.length} 个文件`);
+      
+    } catch (error) {
+      console.error('File upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : '文件上传失败';
+      message.error(errorMessage);
     }
   };
 

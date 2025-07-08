@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Send, Paperclip, Image, Smile } from 'lucide-react';
+import { api } from '../../utils/api';
 
 interface UserChatPageProps {}
 
@@ -9,18 +10,58 @@ export const UserChatPage: React.FC<UserChatPageProps> = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [agentInfo, setAgentInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 根据 agentId 或 shortId 获取对应的客服信息
     const loadAgentInfo = async () => {
-      // 这里应该调用API获取客服信息
-      const mockAgentInfo = {
-        id: agentId || shortId,
-        name: '客服小助手',
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-        isOnline: true
-      };
-      setAgentInfo(mockAgentInfo);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        let resolvedAgentId = agentId;
+        
+        // 如果是短链接，先解析获取真实的agentId
+        if (shortId) {
+          const shortLinkResponse = await api.shortlinks.resolve(shortId);
+          
+          if (shortLinkResponse.success && shortLinkResponse.data) {
+            resolvedAgentId = shortLinkResponse.data.agentId;
+            
+            // 如果没有agentId，从originalUrl中提取
+            if (!resolvedAgentId && shortLinkResponse.data.originalUrl) {
+              const urlMatch = shortLinkResponse.data.originalUrl.match(/\/chat\/([^\/]+)/);
+              if (urlMatch) {
+                resolvedAgentId = urlMatch[1];
+              }
+            }
+          } else {
+            throw new Error('短链接无效或已过期');
+          }
+        }
+        
+        if (!resolvedAgentId) {
+          throw new Error('无法获取客服信息');
+        }
+        
+        // 这里应该调用API获取客服信息
+        // 暂时使用模拟数据，后续可以添加获取客服信息的API
+        const mockAgentInfo = {
+          id: resolvedAgentId,
+          name: '客服小助手',
+          avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+          isOnline: true
+        };
+        
+        setAgentInfo(mockAgentInfo);
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '加载客服信息失败';
+        setError(errorMessage);
+        console.error('Load agent info error:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadAgentInfo();
@@ -58,12 +99,41 @@ export const UserChatPage: React.FC<UserChatPageProps> = () => {
     }
   };
 
-  if (!agentInfo) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">正在连接客服...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <Smile className="h-12 w-12 mx-auto" />
+          </div>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            重新加载
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!agentInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">客服信息不可用</p>
         </div>
       </div>
     );
