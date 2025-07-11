@@ -1,0 +1,80 @@
+启动
+（第一个 CMD 窗口）：
+cd backend
+D:\DevTools\nvm\nodejs\npm.cmd run dev
+（第二个 CMD 窗口）：
+cd frontend
+D:\DevTools\nvm\nodejs\npm.cmd run dev   
+---------------------------------------------------------
+多座席客服管理系统
+后端项目结构:
+express 用于构建 API，dotenv 用于管理环境变量，以及  mysql 客户端库。
+
+设计数据库模式:
+根据前端项目定义相应的列和关系，创建表单，例如：
+users: 存储用户（包括管理员和坐席）信息，包含 id, name, role_id, avatar_url 等。
+roles: 存储角色定义，包含 id, name, display_name, level, color 等。
+permissions: 存储权限定义，包含 id, name, display_name, category, description 等。
+role_permissions: 关联 roles 和 permissions 表，定义每个角色拥有的权限。
+keys: 存储密钥信息，包含 id, key_value (naoiod值), type, status, created_at, expires_at, agent_id 等。
+key_usage_logs: 存储密钥使用日志，包含 id, key_id, action, timestamp, ip_address 等。
+agents: 存储坐席的详细信息，包含 id, user_id, status, current_sessions, max_sessions, skills, groups 等。
+customers: 存储客户信息，包含 id, name, is_online, last_seen, ip_address 等。
+chat_sessions: 存储聊天会话信息，包含 id, customer_id, agent_id, status, start_time, last_message_time 等。
+chat_messages: 存储聊天消息，包含 id, session_id, sender_id, sender_type, content, type, timestamp 等。
+agent_settings: 存储坐席的个性化设置，包含 id, agent_id, auto_welcome_enabled, sound_notifications 等。
+quick_replies: 存储快捷回复，关联 agent_settings。
+welcome_messages: 存储欢迎语，关联 agent_settings。
+blacklisted_users: 存储黑名单用户，关联 agent_settings。
+
+实现后端 API 端点:
+在 server 文件夹内创建 API 路由和控制器，使用 Supabase 客户端库与数据库交互。
+认证 API:
+POST /api/auth/login: 接收密钥（管理员密钥或坐席密钥），验证其有效性，并返回用户（管理员或坐席）信息和认证令牌。
+POST /api/auth/validate-key: 验证坐席密钥的有效性（格式、状态、有效期等）。
+密钥管理 API:
+GET /api/keys: 获取所有密钥列表。
+POST /api/keys: 生成新密钥并保存到数据库。
+PUT /api/keys/:id: 更新指定密钥的信息（例如备注、最大使用次数、过期时间）。
+DELETE /api/keys/:id: 删除指定密钥。
+POST /api/keys/:id/suspend: 暂停指定密钥。
+POST /api/keys/:id/activate: 激活指定密钥。
+坐席管理 API:
+GET /api/agents: 获取所有坐席列表。
+POST /api/agents: 创建新坐席。
+PUT /api/agents/:id: 更新坐席信息。
+DELETE /api/agents/:id: 删除坐席。
+PUT /api/agents/:id/status: 更新坐席状态。
+聊天与会话 API:
+GET /api/customers: 获取客户列表。
+GET /api/sessions: 获取所有会话列表。
+GET /api/sessions/:id/messages: 获取指定会话的消息记录。
+POST /api/sessions/:id/messages: 发送新消息到指定会话。
+POST /api/sessions/:id/assign: 将会话分配给指定坐席。
+坐席设置 API:
+GET /api/agent-settings/:agentId: 获取指定坐席的设置。
+PUT /api/agent-settings/:agentId: 更新坐席设置（例如自动回复、声音通知）。
+POST /api/agent-settings/:agentId/quick-replies: 添加快捷回复。
+PUT /api/agent-settings/:agentId/quick-replies/:id: 更新快捷回复。
+DELETE /api/agent-settings/:agentId/quick-replies/:id: 删除快捷回复。
+类似地，为欢迎语 (welcome-messages) 和黑名单 (blacklist) 实现 CRUD 操作。
+文件存储 API:
+POST /api/upload/file: 处理文件上传，将文件存储到 Supabase Storage，并返回文件 URL。
+
+前端 Zustand 存储以调用 API:
+src/stores/authStore.ts: login 方法，不再使用模拟数据，而是调用后端认证 API (POST /api/auth/login)。
+
+src/stores/adminStore.ts: refreshDashboard 方法，从后端 API 获取仪表盘数据。generateKey 方法，调用后端生成密钥 API (POST /api/keys)。validateKey 方法，调用后端密钥验证 API (POST /api/auth/validate-key)。updateKey, deleteKey, suspendKey, activateKey 方法，调用相应的后端密钥管理 API。
+
+src/stores/agentStore.ts: setAgents, addAgent, updateAgent, removeAgent, setAgentStatus 等方法，调用后端坐席管理 API。
+
+src/stores/chatStore.ts: setCustomers, setSessions, addMessage 等方法，从后端 API 获取客户和会话数据，并发送消息。setAgentSettings, updateQuickReplies, updateWelcomeMessages, addToBlacklist, removeFromBlacklist 等方法，调用后端坐席设置 API。
+
+src/stores/sessionStore.ts: setSessions, addSession, updateSession, assignSession 等方法，调用后端会话管理 API。
+
+文件上传组件:
+src/components/chat/FileUploadModal.tsx:  handleUpload 函数，不再只是打印文件信息，而是调用后端文件上传 API (POST /api/upload/file)。
+
+src/components/admin/KeyManagement.tsx 中的模拟数据初始化: 移除 useEffect 中用于初始化模拟密钥数据的代码，因为数据将从后端获取。
+
+更新 src/components/agent/AgentSettings.tsx 中的模拟密钥信息: currentKey 的模拟数据也应替换为从后端获取的实际坐席密钥信息。

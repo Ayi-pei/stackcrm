@@ -1,19 +1,130 @@
 # 云聚CRM - 智能客服管理系统
 
-🚀 项目概述
-核心功能介绍（多角色认证、智能客服、密钥管理等）
-技术架构说明
-系统特色功能
-🛠 开发环境搭建
-环境要求和依赖安装
-本地开发配置
-环境变量设置
-🌐 生产环境部署
-提供了三种部署方案：
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Express](https://img.shields.io/badge/Express-4.18.2-lightgrey.svg)](https://expressjs.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.38.0-green.svg)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Docker部署（推荐）- 包含完整的docker-compose配置
-传统服务器部署 - 详细的Linux服务器配置步骤
-云平台部署 - Vercel、Railway、AWS等平台部署指南
+## 🚀 项目概述
+
+云聚CRM是一个现代化的智能客服管理系统，提供完整的客户服务解决方案。系统采用前后端分离架构，支持实时聊天、多角色权限管理、智能密钥系统等核心功能。
+
+### 核心功能
+
+- **多角色权限体系**: 支持超级管理员、管理员、主管、经理、客服、实习客服等6种角色
+- **智能密钥管理**: naoiod安全格式密钥，支持自动过期和使用统计
+- **实时聊天系统**: 基于Socket.io的实时通信，支持文件传输
+- **客户管理**: 完整的客户信息管理和聊天历史记录
+- **智能分配**: 自动会话分配和负载均衡
+- **数据分析**: 实时监控和统计报表
+
+### 技术架构
+
+**前端技术栈:**
+- React 18.3.1 + TypeScript
+- Vite 构建工具
+- Ant Design UI 组件库
+- Zustand 状态管理
+- React Router 路由管理
+- Socket.io-client 实时通信
+- Tailwind CSS 样式框架
+
+**后端技术栈:**
+- Node.js + Express.js
+- Supabase (PostgreSQL) 数据库
+- Socket.io 实时通信
+- JWT 身份认证
+- Multer 文件上传
+- Helmet 安全防护
+
+## 🛠 快速开始
+
+### 环境要求
+
+- Node.js 18.0+
+- npm 或 yarn
+- PostgreSQL 数据库 (推荐使用 Supabase)
+
+### 安装步骤
+
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/your-org/yunju-crm.git
+   cd yunju-crm
+   ```
+
+2. **集成前端到后端**
+   ```bash
+   # 自动安装依赖、构建前端并集成到后端
+   .\integrate-frontend-to-backend.bat
+   ```
+
+3. **配置环境变量**
+   ```bash
+   # 复制环境变量模板
+   cp backend/.env.example backend/.env
+   
+   # 编辑环境变量
+   nano backend/.env
+   ```
+
+4. **初始化数据库**
+   ```bash
+   # 在Supabase中执行数据库脚本
+   # 文件位置: backend/database/schema.sql
+   ```
+
+5. **启动集成服务器**
+   ```bash
+   # 启动集成服务器 (前端+后端)
+   .\start-integrated-server.bat
+   ```
+
+6. **访问应用**
+   - 完整应用: http://localhost:3001
+   - API接口: http://localhost:3001/api/*
+   - 健康检查: http://localhost:3001/health
+   - 管理员登录: 输入 `adminayi888` 自动跳转
+
+## 🌐 部署指南
+
+### Docker 部署 (推荐)
+
+1. **使用 Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **环境变量配置**
+   ```yaml
+   # docker-compose.yml
+   version: '3.8'
+   services:
+     frontend:
+       build: .
+       ports:
+         - "80:80"
+     backend:
+       build: ./server
+       ports:
+         - "3001:3001"
+       environment:
+         - NODE_ENV=production
+   ```
+
+### 传统服务器部署
+
+详细部署步骤请参考 [部署文档](docs/DEPLOYMENT.md)
+
+### 云平台部署
+
+支持以下平台的一键部署：
+- **Vercel**: 前端部署
+- **Railway**: 全栈部署  
+- **AWS**: 企业级部署
+- **阿里云**: 国内部署方案
 🗄 数据库设计
 完整的13个核心表结构：
 
@@ -484,90 +595,77 @@ vercel --prod
 #### 1. 用户表 (users)
 ```sql
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE,
-    avatar_url TEXT,
-    role_id UUID REFERENCES roles(id),
-    status VARCHAR(20) DEFAULT 'offline',
-    access_key VARCHAR(16) UNIQUE, -- naoiod格式密钥
-    key_expires_at TIMESTAMP,
-    is_online BOOLEAN DEFAULT false,
-    last_active_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id CHAR(36) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  avatar_url VARCHAR(255),
+  role_id CHAR(36),
+  status VARCHAR(20) DEFAULT 'offline',
+  access_key VARCHAR(16) UNIQUE,
+  key_expires_at DATETIME,
+  is_online BOOLEAN DEFAULT FALSE,
+  last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_users_access_key (access_key),
+  INDEX idx_users_role_id (role_id),
+  INDEX idx_users_status (status)
 );
-
--- 索引
-CREATE INDEX idx_users_access_key ON users(access_key);
-CREATE INDEX idx_users_role_id ON users(role_id);
-CREATE INDEX idx_users_status ON users(status);
 ```
 
 #### 2. 角色表 (roles)
 ```sql
 CREATE TABLE roles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(50) UNIQUE NOT NULL,
-    display_name VARCHAR(100) NOT NULL,
-    color VARCHAR(7) NOT NULL, -- 十六进制颜色
-    level INTEGER NOT NULL, -- 权限级别 1-100
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id CHAR(36) PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  display_name VARCHAR(100) NOT NULL,
+  color VARCHAR(7) NOT NULL,
+  level INT NOT NULL,
+  description TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
--- 初始化角色数据
-INSERT INTO roles (name, display_name, color, level, description) VALUES
-('super_admin', '超级管理员', '#ff4d4f', 100, '系统最高权限'),
-('admin', '管理员', '#fa8c16', 90, '管理员权限'),
-('supervisor', '主管', '#1890ff', 70, '团队主管权限'),
-('senior_agent', '高级客服', '#52c41a', 50, '高级客服权限'),
-('agent', '普通客服', '#722ed1', 30, '普通客服权限'),
-('trainee', '实习客服', '#13c2c2', 10, '实习客服权限');
 ```
 
 #### 3. 权限表 (permissions)
 ```sql
 CREATE TABLE permissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) UNIQUE NOT NULL,
-    display_name VARCHAR(100) NOT NULL,
-    category VARCHAR(50) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id CHAR(36) PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,
+  display_name VARCHAR(100) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  description TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 角色权限关联表
 CREATE TABLE role_permissions (
-    role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-    permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
-    PRIMARY KEY (role_id, permission_id)
+  role_id CHAR(36),
+  permission_id CHAR(36),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (role_id, permission_id)
 );
 ```
 
 #### 4. 密钥管理表 (access_keys)
 ```sql
 CREATE TABLE access_keys (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    key_value VARCHAR(16) UNIQUE NOT NULL, -- naoiod格式密钥
-    key_type VARCHAR(20) NOT NULL, -- 'agent' 或 'admin'
-    status VARCHAR(20) DEFAULT 'active', -- 'active', 'expired', 'suspended'
-    user_id UUID REFERENCES users(id),
-    created_by UUID REFERENCES users(id),
-    expires_at TIMESTAMP NOT NULL,
-    max_usage INTEGER, -- 最大使用次数
-    usage_count INTEGER DEFAULT 0,
-    last_used_at TIMESTAMP,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id CHAR(36) PRIMARY KEY,
+  key_value VARCHAR(16) UNIQUE NOT NULL,
+  key_type VARCHAR(20) NOT NULL,
+  status VARCHAR(20) DEFAULT 'active',
+  user_id CHAR(36),
+  created_by CHAR(36),
+  expires_at DATETIME NOT NULL,
+  max_usage INT,
+  usage_count INT DEFAULT 0,
+  last_used_at DATETIME,
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_access_keys_key_value (key_value),
+  INDEX idx_access_keys_user_id (user_id),
+  INDEX idx_access_keys_status (status),
+  INDEX idx_access_keys_expires_at (expires_at)
 );
-
--- 索引
-CREATE INDEX idx_access_keys_key_value ON access_keys(key_value);
-CREATE INDEX idx_access_keys_user_id ON access_keys(user_id);
-CREATE INDEX idx_access_keys_status ON access_keys(status);
-CREATE INDEX idx_access_keys_expires_at ON access_keys(expires_at);
 ```
 
 #### 5. 密钥使用日志表 (key_usage_logs)
