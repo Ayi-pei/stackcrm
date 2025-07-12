@@ -1,0 +1,11 @@
+{
+    "scripts": {
+      "dev": "bolt run dev",
+      "build": "bolt run build",
+      "start": "bolt run start",
+      "preview": "bolt run start"
+    },
+    "devDependencies": {
+      "concurrently": "^8.0.0"
+    }
+  }

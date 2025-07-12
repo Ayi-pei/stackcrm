@@ -1,3 +1,23 @@
 {
-  "template": "bolt-vite-react-ts"
+  "projects": {
+    "frontend": {
+      "root": "./frontend",
+      "config": "./frontend/vite.config.ts"
+    },
+    "backend": {
+      "root": "./backend",
+      "port": 3001,
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  },
+  "proxy": {
+    "/api": "http://localhost:3001"
+  },
+  "scripts": {
+    "dev": "concurrently \"bolt dev frontend\" \"bolt dev backend\"",
+    "build": "bolt build frontend && bolt build backend",
+    "start": "bolt start backend"
+  }
 }
