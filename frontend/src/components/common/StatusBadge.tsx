@@ -1,10 +1,10 @@
-import React from 'react';
-import { AgentStatus } from '../../types';
-import { AGENT_STATUS_CONFIG } from '../../constants/agentStatus';
+import React from "react";
+import { AgentStatus } from "../../types";
+import { AGENT_STATUS_CONFIG } from "../../constants/agentStatus";
 
 interface StatusBadgeProps {
   status: AgentStatus;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   showIcon?: boolean;
   showLabel?: boolean;
   className?: string;
@@ -12,21 +12,21 @@ interface StatusBadgeProps {
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
-  size = 'md',
+  size = "md",
   showIcon = true,
   showLabel = true,
-  className = ''
+  className = "",
 }) => {
   const config = AGENT_STATUS_CONFIG[status];
-  
+
   if (!config) {
     return null;
   }
 
   const sizeClasses = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-1 text-sm',
-    lg: 'px-4 py-2 text-base'
+    sm: "px-2 py-1 text-xs",
+    md: "px-3 py-1 text-sm",
+    lg: "px-4 py-2 text-base",
   };
 
   return (
@@ -35,7 +35,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       style={{
         color: config.color,
         backgroundColor: config.bgColor,
-        borderColor: config.borderColor
+        borderColor: config.borderColor,
       }}
     >
       {showIcon && <span>{config.icon}</span>}

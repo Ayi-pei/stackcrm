@@ -1,10 +1,10 @@
-import React from 'react';
-import { Settings, Wifi, WifiOff, Bell, BellOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../stores/authStore';
-import { useChatStore } from '../../stores/chatStore';
-import { useAgentStore } from '../../stores/agentStore';
-import { AgentStatus } from '../../types';
+import React from "react";
+import { Settings, Wifi, WifiOff, Bell, BellOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
+import { useAgentStore } from "../../stores/agentStore";
+import { AgentStatus } from "../../types";
 
 export const AgentHeader: React.FC = () => {
   const navigate = useNavigate();
@@ -28,9 +28,9 @@ export const AgentHeader: React.FC = () => {
             </div>
             <span className="font-semibold text-gray-900">客服工作台</span>
           </div>
-          
+
           <div className="flex items-center space-x-2">
-            {connectionStatus === 'connected' ? (
+            {connectionStatus === "connected" ? (
               <div className="flex items-center space-x-1 text-green-600">
                 <Wifi size={16} />
                 <span className="text-sm">已连接</span>
@@ -53,7 +53,12 @@ export const AgentHeader: React.FC = () => {
             )}
           </div>
 
+          <label htmlFor="agent-status-select" className="sr-only">
+            状态选择
+          </label>
           <select
+            id="agent-status-select"
+            aria-label="状态选择"
             className="text-sm border border-gray-300 rounded px-2 py-1"
             onChange={(e) => handleStatusChange(e.target.value)}
             defaultValue="online"
@@ -65,7 +70,7 @@ export const AgentHeader: React.FC = () => {
           </select>
 
           <button
-            onClick={() => navigate('/agent-settings')}
+            onClick={() => navigate("/agent-settings")}
             className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
             title="设置"
           >
@@ -78,7 +83,7 @@ export const AgentHeader: React.FC = () => {
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
                 <p className="text-xs text-gray-500">{user.role.displayName}</p>
               </div>
-              
+
               <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
                 {user.name.charAt(0)}
               </div>
