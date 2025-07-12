@@ -1,13 +1,11 @@
 {
-  "name": "customer-service-chat-server",
-  "version": "1.0.0",
-  "description": "Backend server for customer service chat system",
-  "main": "index.js",
+  "name": "backend",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "build": "echo 'Backend build complete'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
@@ -27,13 +25,5 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  },
-  "keywords": [
-    "chat",
-    "customer-service",
-    "websocket",
-    "express"
-  ],
-  "author": "",
-  "license": "MIT"
+  }
 }

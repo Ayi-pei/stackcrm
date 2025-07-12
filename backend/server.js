@@ -1,43 +1,39 @@
-import dotenv from 'dotenv';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import morgan from 'morgan';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const http = require('http');
+const socketIo = require('socket.io');
+const dotenv = require('dotenv');
+const fetch = require('node-fetch');
 
-// 首先初始化 __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// 现在可以安全地使用 __dirname 加载环境变量
+// 加载环境变量
 dotenv.config({ path: path.resolve(__dirname, './.env') });
 
-// 路由导入
-import authRoutes from './routes/auth.js';
-import chatRoutes from './routes/chat.js';
-import adminRoutes from './routes/admin.js';
-import agentRoutes from './routes/agents.js';
-import keyRoutes from './routes/keys.js';
-import uploadRoutes from './routes/upload.js';
-import agentSettingsRoutes from './routes/agentSettings.js';
-import shortlinksRoutes from './routes/shortlinks.js';
+// 导入路由
+const authRoutes = require('./routes/auth');
+const chatRoutes = require('./routes/chat');
+const adminRoutes = require('./routes/admin');
+const agentRoutes = require('./routes/agents');
+const keyRoutes = require('./routes/keys');
+const uploadRoutes = require('./routes/upload');
+const agentSettingsRoutes = require('./routes/agentSettings');
+const shortlinksRoutes = require('./routes/shortlinks');
 
-// 中间件导入
-import { errorHandler } from './middleware/errorHandler.js';
-import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
+// 导入中间件
+const { errorHandler } = require('./middleware/errorHandler');
+const { rateLimiterMiddleware } = require('./middleware/rateLimiter');
 
-// Socket处理器导入
-import { setupSocketHandlers } from './socket/handlers.js';
+// 导入Socket处理器
+const { setupSocketHandlers } = require('./socket/handlers');
 
 const app = express();
-const server = createServer(app);
-const io = new Server(server, {
+const server = http.createServer(app);
+const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -48,7 +44,7 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -59,8 +55,6 @@ app.use(rateLimiterMiddleware);
 
 // 静态文件服务
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// 前端静态文件服务
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API路由
@@ -86,8 +80,9 @@ app.get('/health', (req, res) => {
 app.get('/s/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
+    const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3001';
     
-    const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:3001'}/api/shortlinks/resolve/${shortId}`);
+    const response = await fetch(`${apiBaseUrl}/api/shortlinks/resolve/${shortId}`);
     
     if (!response.ok) {
       return res.status(404).send('短链接不存在或已失效');
@@ -129,7 +124,7 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`🚀 服务器运行在端口 ${PORT}`);
   console.log(`📊 健康检查: http://localhost:${PORT}/health`);
-  console.log(`🌐 客户端地址: ${process.env.CLIENT_URL || "http://localhost:5173"}`);
+  console.log(`🌐 客户端地址: ${process.env.CLIENT_URL || "http://localhost:3000"}`);
 });
 
 // 优雅关闭
@@ -149,4 +144,4 @@ process.on('SIGINT', () => {
   });
 });
 
-export default app;
+module.exports = app;
