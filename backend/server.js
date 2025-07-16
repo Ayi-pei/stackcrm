@@ -1,33 +1,38 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
-const http = require('http');
-const socketIo = require('socket.io');
-const dotenv = require('dotenv');
-const fetch = require('node-fetch');
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import morgan from 'morgan';
+import http from 'http';
+import socketIo from 'socket.io';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import { fileURLToPath } from 'url';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 加载环境变量
 dotenv.config({ path: path.resolve(__dirname, './.env') });
 
 // 导入路由
-const authRoutes = require('./routes/auth');
-const chatRoutes = require('./routes/chat');
-const adminRoutes = require('./routes/admin');
-const agentRoutes = require('./routes/agents');
-const keyRoutes = require('./routes/keys');
-const uploadRoutes = require('./routes/upload');
-const agentSettingsRoutes = require('./routes/agentSettings');
-const shortlinksRoutes = require('./routes/shortlinks');
+import authRoutes from './routes/auth.js';
+import chatRoutes from './routes/chat.js';
+import adminRoutes from './routes/admin.js';
+import agentRoutes from './routes/agents.js';
+import keyRoutes from './routes/keys.js';
+import uploadRoutes from './routes/upload.js';
+import agentSettingsRoutes from './routes/agentSettings.js';
+import shortlinksRoutes from './routes/shortlinks.js';
 
 // 导入中间件
-const { errorHandler } = require('./middleware/errorHandler');
-const { rateLimiterMiddleware } = require('./middleware/rateLimiter');
+import { errorHandler } from './middleware/errorHandler.js';
+import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
 
 // 导入Socket处理器
-const { setupSocketHandlers } = require('./socket/handlers');
+import { setupSocketHandlers } from './socket/handlers.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -144,4 +149,4 @@ process.on('SIGINT', () => {
   });
 });
 
-module.exports = app;
+export default app;
