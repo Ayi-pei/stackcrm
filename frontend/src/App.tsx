@@ -17,7 +17,7 @@ import { KeyManagement } from './components/admin/KeyManagement';
 function App() {
   const { isAuthenticated, user } = useAuthStore();
 
-  // Check user role and determine interface
+  // 检查用户角色
   const isAgent = user?.role.name === 'agent' || user?.role.name === 'senior_agent';
   const isAdmin = user?.role.name === 'super_admin' || user?.role.name === 'admin';
 
@@ -26,7 +26,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Routes>
-            {/* 统一登录页面 */}
+            {/* 登录页面 - 已登录用户重定向到相应界面 */}
             <Route 
               path="/login" 
               element={
@@ -42,46 +42,54 @@ function App() {
               } 
             />
             
-            {/* 用户聊天页面 - 无需登录 */}
+            {/* 游客聊天页面 - 无需登录 */}
             <Route path="/chat/:agentId" element={<UserChatPage />} />
             <Route path="/s/:shortId" element={<UserChatPage />} />
             
-            {/* 受保护的路由 */}
+            {/* 需要登录的路由 */}
             <Route path="/" element={<PrivateRoute />}>
-              {/* 管理员路由 */}
+              {/* 管理员专用路由 */}
               <Route path="/admin" element={<AppLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="keys" element={<KeyManagement />} />
               </Route>
               
-              {/* 坐席聊天界面 */}
-              <Route path="/agent-chat" element={<AgentChatLayout />} />
-              <Route path="/agent-settings" element={<AgentSettings />} />
+              {/* 坐席专用路由 */}
+              <Route 
+                path="/agent-chat" 
+                element={
+                  isAgent ? <AgentChatLayout /> : <Navigate to="/login" replace />
+                } 
+              />
+              <Route 
+                path="/agent-settings" 
+                element={
+                  isAgent ? <AgentSettings /> : <Navigate to="/login" replace />
+                } 
+              />
               
-              {/* 其他管理功能 */}
+              {/* 通用管理功能路由 */}
               <Route path="/" element={<AppLayout />}>
                 <Route index element={<Navigate to={
                   isAdmin ? "/admin/dashboard" : 
                   isAgent ? "/agent-chat" : 
-                  "/admin/dashboard"
+                  "/login"
                 } replace />} />
                 <Route path="roles" element={<RoleManagement />} />
                 <Route path="distributor" element={<SessionDistributor />} />
               </Route>
             </Route>
             
-            {/* 404 重定向 */}
+            {/* 404和默认重定向 */}
             <Route path="*" element={
-              isAuthenticated ? (
-                <Navigate to={
+              <Navigate to={
+                isAuthenticated ? (
                   isAdmin ? "/admin/dashboard" : 
                   isAgent ? "/agent-chat" : 
                   "/admin/dashboard"
-                } replace />
-              ) : (
-                <Navigate to="/login" replace />
-              )
+                ) : "/login"
+              } replace />
             } />
           </Routes>
         </div>
