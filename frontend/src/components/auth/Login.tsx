@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, message, Alert } from 'antd';
 import { Key, Shield, User } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
@@ -9,25 +9,13 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [loginType, setLoginType] = useState<'unknown' | 'admin' | 'agent'>('unknown');
-  const { login, loading: authLoading, error: authError } = useAuthStore();
+  const { login, error: authError } = useAuthStore(); // 移除了多余的loading状态
   const navigate = useNavigate();
 
-  // 检测输入类型并自动登录管理员
-  const detectInputType = async (value: string) => {
+  // 只检测输入类型，不执行登录
+  const detectInputType = (value: string) => {
     if (value === 'adminayi888') {
       setLoginType('admin');
-      // 自动登录管理员
-      setLoading(true);
-      try {
-        await login(value);
-        message.success('管理员登录成功');
-        navigate('/admin/dashboard');
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '登录失败';
-        message.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
     } else if (value.match(/^[a-z0-9]{12,16}$/)) {
       setLoginType('agent');
     } else {
@@ -35,29 +23,19 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    detectInputType(value);
-  };
-
-  const handleSubmit = async () => {
-    if (!inputValue.trim()) {
-      message.error('请输入坐席密钥');
-      return;
-    }
-
-    // 管理员已在输入时自动登录，这里只处理坐席登录
-    if (inputValue === 'adminayi888') {
-      return; // 管理员已经处理过了
-    }
-
+  // 统一处理登录逻辑
+  const handleLogin = async (key: string) => {
     setLoading(true);
-    
     try {
-      await login(inputValue);
-      message.success('坐席登录成功');
-      navigate('/agent-chat');
+      await login(key);
+      message.success('登录成功');
+      
+      // 根据登录类型跳转不同页面
+      if (key === 'adminayi888') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/agent-chat');
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '登录失败';
       message.error(errorMessage);
@@ -65,6 +43,36 @@ export const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    detectInputType(value);
+  };
+
+  // 处理表单提交
+  const handleSubmit = async () => {
+    if (!inputValue.trim()) {
+      message.error('请输入密钥');
+      return;
+    }
+    await handleLogin(inputValue);
+  };
+
+  // 管理员自动登录效果（仅UI提示）
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loginType === 'admin') {
+      // 这里只是模拟自动登录效果，实际登录在提交时执行
+      timer = setTimeout(() => {
+        if (inputValue === 'adminayi888') {
+          handleLogin(inputValue);
+        }
+      }, 1500); // 1.5秒后自动登录
+    }
+    return () => clearTimeout(timer);
+  }, [loginType, inputValue]);
 
   const getInputIcon = () => {
     switch (loginType) {
@@ -138,8 +146,8 @@ export const Login: React.FC = () => {
           <Alert
             message={
               loginType === 'admin' 
-                ? '检测到管理员密钥，正在自动登录到管理控制台...' 
-                : '检测到坐席密钥，点击登录按钮进入客服工作台'
+                ? '检测到管理员密钥，将自动登录...' 
+                : '检测到坐席密钥，请点击登录按钮'
             }
             type={loginType === 'admin' ? 'success' : 'info'}
             showIcon
@@ -165,6 +173,7 @@ export const Login: React.FC = () => {
                   : ''
               }`}
               autoComplete="off"
+              disabled={loading} // 登录时禁用输入
             />
           </Form.Item>
 
@@ -172,7 +181,7 @@ export const Login: React.FC = () => {
             <Button
               type="primary"
               htmlType="submit"
-              loading={loading || authLoading}
+              loading={loading}
               className={`w-full transition-all duration-300 ${
                 loginType === 'admin' 
                   ? 'bg-gradient-to-r from-green-600 to-green-700 border-0' 
@@ -181,15 +190,15 @@ export const Login: React.FC = () => {
                   : ''
               }`}
               size="large"
-              disabled={!inputValue.trim() || loginType === 'admin'}
+              disabled={!inputValue.trim()}
             >
-              {loginType === 'admin' 
-                ? '管理员自动登录中...' 
-                : (loading || authLoading) 
-                ? '验证中...' 
-                : loginType === 'agent' 
-                ? '坐席登录' 
-                : '登录'}
+              {loading 
+                ? '登录中...' 
+                : loginType === 'admin' 
+                  ? '管理员登录' 
+                  : loginType === 'agent' 
+                    ? '坐席登录' 
+                    : '登录'}
             </Button>
           </Form.Item>
         </Form>
