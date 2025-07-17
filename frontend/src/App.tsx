@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
 import { useAuthStore } from './stores/authStore';
 import { PrivateRoute } from './components/common/PrivateRoute';
 import { Login } from './components/auth/Login';
