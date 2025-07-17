@@ -3,12 +3,7 @@ import { Layout, Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Users, 
-  Shield, 
-  Monitor, 
-  GitBranch,
-  Key,
-  BarChart3
+  Key
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -21,7 +16,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, hasPermission } = useAuthStore();
+  const { user } = useAuthStore();
 
   const isAdmin = user?.role.name === 'super_admin' || user?.role.name === 'admin';
 
@@ -39,34 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     }
   ];
 
-  // Regular menu items (for non-admin users)
-  const regularMenuItems = [
-    {
-      key: '/distributor',
-      icon: <GitBranch size={18} />,
-      label: '会话分配',
-      permission: 'agent.assign'
-    },
-    {
-      key: '/agents',
-      icon: <Users size={18} />,
-      label: '坐席管理',
-      permission: 'agent.edit'
-    },
-    {
-      key: '/roles',
-      icon: <Shield size={18} />,
-      label: '角色权限',
-      permission: 'system.config'
-    }
-  ];
-
-  const menuItems = isAdmin ? adminMenuItems : regularMenuItems;
-
-  const filteredMenuItems = menuItems.filter(item => {
-    if (!item.permission) return true;
-    return hasPermission(item.permission);
-  });
+  const menuItems = isAdmin ? adminMenuItems : [];
 
   return (
     <Sider 
@@ -95,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
-        items={filteredMenuItems}
+        items={menuItems}
         onClick={({ key }) => navigate(key)}
         className="border-r-0"
       />

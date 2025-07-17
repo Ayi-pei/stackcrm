@@ -1,14 +1,27 @@
 import React from 'react';
-import { Bell, Search, LogOut, User } from 'lucide-react';
+import { Bell, Search, LogOut, User, Menu } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuthStore();
 
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors lg:hidden"
+            >
+              <Menu size={20} />
+            </button>
+          )}
+          
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -41,7 +54,15 @@ export const Header: React.FC = () => {
               </div>
               
               <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <User className="h-4 w-4 text-gray-600" />
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name}
+                    className="h-full w-full rounded-lg object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-gray-600" />
+                )}
               </div>
 
               <button

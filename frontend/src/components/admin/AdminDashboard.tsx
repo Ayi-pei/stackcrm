@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { useAdminStore } from "../../stores/adminStore";
 import { useNavigate } from "react-router-dom";
-import { KeyInfo } from "../../types/admin";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 
@@ -53,6 +52,11 @@ export const AdminDashboard: React.FC = () => {
 
   const { todayStats, recentLogs, expiringKeys, topAgents } = dashboardData;
   const criticalKeys = getExpiringKeys(3); // 3天内过期的关键密钥
+
+  // 计算在线率
+  const onlineRate = todayStats.activeKeys > 0 
+    ? (todayStats.onlineAgents / todayStats.activeKeys) * 100 
+    : 0;
 
   // 密钥状态分布
   const keyStatusData = [
@@ -129,7 +133,7 @@ export const AdminDashboard: React.FC = () => {
       title: "坐席",
       dataIndex: "agentName",
       key: "agentName",
-      render: (name: string, record: KeyInfo) => (
+      render: (name: string) => (
         <div>
           <div className="font-medium">{name || "未分配"}</div>
         </div>

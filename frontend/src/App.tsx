@@ -8,8 +8,6 @@ import { Login } from './components/auth/Login';
 import { UserChatPage } from './components/chat/UserChatPage';
 import { AppLayout } from './components/layout/AppLayout';
 import { AgentChatLayout } from './components/layout/AgentChatLayout';
-import { RoleManagement } from './components/role/RoleManagement';
-import { SessionDistributor } from './components/session/SessionDistributor';
 import { AgentSettings } from './components/agent/AgentSettings';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { KeyManagement } from './components/admin/KeyManagement';
@@ -69,16 +67,12 @@ function App() {
                 } 
               />
               
-              {/* 通用管理功能路由 */}
-              <Route path="/" element={<AppLayout />}>
-                <Route index element={<Navigate to={
-                  isAdmin ? "/admin/dashboard" : 
-                  isAgent ? "/agent-chat" : 
-                  "/login"
-                } replace />} />
-                <Route path="roles" element={<RoleManagement />} />
-                <Route path="distributor" element={<SessionDistributor />} />
-              </Route>
+              {/* 默认重定向 */}
+              <Route index element={<Navigate to={
+                isAdmin ? "/admin/dashboard" : 
+                isAgent ? "/agent-chat" : 
+                "/login"
+              } replace />} />
             </Route>
             
             {/* 404和默认重定向 */}

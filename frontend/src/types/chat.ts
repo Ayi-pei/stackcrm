@@ -10,7 +10,7 @@ export interface Customer {
   userAgent?: string;
   location?: string;
   isBlacklisted?: boolean;
-  hasReceivedWelcome?: boolean; // 新增：是否已收到欢迎语
+  hasReceivedWelcome?: boolean;
 }
 
 export interface ChatMessage {
@@ -26,7 +26,7 @@ export interface ChatMessage {
   fileName?: string;
   fileSize?: number;
   fileType?: string;
-  isWelcomeMessage?: boolean; // 新增：标识是否为欢迎语消息
+  isWelcomeMessage?: boolean;
 }
 
 export interface ChatSession {
@@ -40,7 +40,7 @@ export interface ChatSession {
   unreadCount: number;
   isTyping: boolean;
   typingUser?: string;
-  welcomeMessageSent?: boolean; // 新增：是否已发送欢迎语
+  welcomeMessageSent?: boolean;
 }
 
 export interface QuickReply {
@@ -55,7 +55,7 @@ export interface WelcomeMessage {
   id: string;
   content: string;
   isEnabled: boolean;
-  order: number; // 发送顺序
+  order: number;
 }
 
 export interface AgentSettings {
@@ -66,7 +66,6 @@ export interface AgentSettings {
   soundNotifications: boolean;
   quickReplies: QuickReply[];
   blacklistedUsers: string[];
-  // 新增：自动欢迎语设置
   autoWelcomeEnabled: boolean;
   welcomeMessages: WelcomeMessage[];
 }

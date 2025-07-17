@@ -1,6 +1,92 @@
 import { create } from 'zustand';
-import { Customer, ChatMessage, ChatSession, QuickReply, AgentSettings, FileUpload, WelcomeMessage } from '../types/chat';
 import { api } from '../utils/api';
+
+// 客户信息
+interface Customer {
+  id: string;
+  name: string;
+  avatar?: string;
+  email?: string;
+  isOnline: boolean;
+  lastSeen: Date;
+  ipAddress?: string;
+  device?: string;
+  userAgent?: string;
+  location?: string;
+  isBlacklisted?: boolean;
+  hasReceivedWelcome?: boolean;
+}
+
+// 聊天消息
+interface ChatMessage {
+  id: string;
+  sessionId: string;
+  senderId: string;
+  senderType: 'customer' | 'agent' | 'system';
+  content: string;
+  type: 'text' | 'image' | 'file' | 'audio' | 'system';
+  timestamp: Date;
+  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  isWelcomeMessage?: boolean;
+}
+
+// 聊天会话
+interface ChatSession {
+  id: string;
+  customerId: string;
+  agentId: string;
+  status: 'waiting' | 'active' | 'ended';
+  startTime: Date;
+  endTime?: Date;
+  lastMessageTime: Date;
+  unreadCount: number;
+  isTyping: boolean;
+  typingUser?: string;
+  welcomeMessageSent?: boolean;
+}
+
+// 快捷回复
+interface QuickReply {
+  id: string;
+  title: string;
+  content: string;
+  category?: string;
+  agentId: string;
+}
+
+// 欢迎语
+interface WelcomeMessage {
+  id: string;
+  content: string;
+  isEnabled: boolean;
+  order: number;
+}
+
+// 坐席设置
+interface AgentSettings {
+  id: string;
+  agentId: string;
+  welcomeMessage: string;
+  autoReply: boolean;
+  soundNotifications: boolean;
+  quickReplies: QuickReply[];
+  blacklistedUsers: string[];
+  autoWelcomeEnabled: boolean;
+  welcomeMessages: WelcomeMessage[];
+}
+
+// 文件上传
+interface FileUpload {
+  id: string;
+  file: File;
+  progress: number;
+  status: 'uploading' | 'completed' | 'failed';
+  url?: string;
+}
 
 interface ChatState {
   // Customers and sessions

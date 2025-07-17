@@ -1,6 +1,73 @@
 import { create } from 'zustand';
-import { KeyInfo, KeyUsageLog, DailyStats, AdminDashboardData, KeyGenerationOptions } from '../types/admin';
 import { api } from '../utils/api';
+
+// 密钥信息
+interface KeyInfo {
+  id: string;
+  key: string;
+  type: 'agent' | 'admin';
+  status: 'active' | 'expired' | 'expiring_soon' | 'suspended';
+  createdAt: Date;
+  expiresAt: Date;
+  lastUsedAt?: Date;
+  agentId?: string;
+  agentName?: string;
+  usageCount: number;
+  maxUsage?: number;
+  isOnline: boolean;
+  sessionCount: number;
+  totalSessions: number;
+  createdBy: string;
+  notes?: string;
+}
+
+// 密钥使用日志
+interface KeyUsageLog {
+  id: string;
+  keyId: string;
+  agentId: string;
+  action: 'login' | 'logout' | 'session_start' | 'session_end' | 'heartbeat';
+  timestamp: Date;
+  ipAddress: string;
+  userAgent: string;
+  sessionId?: string;
+  duration?: number;
+}
+
+// 每日统计
+interface DailyStats {
+  date: string;
+  totalKeys: number;
+  activeKeys: number;
+  expiredKeys: number;
+  newKeys: number;
+  totalUsage: number;
+  onlineAgents: number;
+  totalSessions: number;
+}
+
+// 管理员仪表盘数据
+interface AdminDashboardData {
+  todayStats: DailyStats;
+  recentLogs: KeyUsageLog[];
+  expiringKeys: KeyInfo[];
+  topAgents: {
+    agentId: string;
+    agentName: string;
+    sessionCount: number;
+    onlineTime: number;
+    satisfaction: number;
+  }[];
+}
+
+// 密钥生成选项
+interface KeyGenerationOptions {
+  type: 'agent' | 'admin';
+  validityDays: number;
+  maxUsage?: number;
+  agentId?: string;
+  notes?: string;
+}
 
 interface AdminState {
   // Keys management
@@ -42,26 +109,6 @@ interface AdminState {
   setError: (error: string | null) => void;
   selectKey: (key: KeyInfo | null) => void;
 }
-
-// 生成随机naoiod格式密钥
-const generateNaoiodKey = (type: 'agent' | 'admin'): string => {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const length = type === 'admin' ? 12 : 16; // 管理员密钥12位，坐席密钥16位
-  let result = '';
-  
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  
-  return result;
-};
-
-// 验证naoiod格式密钥
-const validateNaoiodFormat = (key: string): boolean => {
-  // naoiod格式：纯小写字母和数字组合，长度12-16位
-  const pattern = /^[a-z0-9]{12,16}$/;
-  return pattern.test(key);
-};
 
 export const useAdminStore = create<AdminState>((set, get) => ({
   keys: [],
