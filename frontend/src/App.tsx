@@ -6,7 +6,7 @@ import { useAuthStore } from './stores/authStore';
 import { PrivateRoute } from './components/common/PrivateRoute';
 import { Login } from './components/auth/Login';
 import { UserChatPage } from './components/chat/UserChatPage';
-import { AdminLayout } from './components/layout/AdminLayout'; // 修复导入
+import { AdminLayout } from './components/layout/AdminLayout';
 import { AgentChatLayout } from './components/layout/AgentChatLayout';
 import { AgentSettings } from './components/agent/AgentSettings';
 import { AdminDashboard } from './components/admin/AdminDashboard';
