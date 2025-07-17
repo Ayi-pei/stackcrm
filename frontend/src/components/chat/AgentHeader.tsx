@@ -1,10 +1,10 @@
 import React from "react";
 import { Settings, Wifi, WifiOff, Bell, BellOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../stores/authStore";
-import { useChatStore } from "../../stores/chatStore";
-import { useAgentStore } from "../../stores/agentStore";
-import { AgentStatus } from "../../types";
+import { useAuthStore } from "../stores/authStore";
+import { useChatStore } from "../stores/chatStore";
+import { useAgentStore } from "../stores/agentStore";
+import { AgentStatus } from "../types";
 
 export const AgentHeader: React.FC = () => {
   const navigate = useNavigate();
