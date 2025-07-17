@@ -14,77 +14,81 @@ import { KeyManagement } from './components/admin/KeyManagement';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
-
-  // 检查用户角色
-  const isAgent = user?.role.name === 'agent' || user?.role.name === 'senior_agent';
-  const isAdmin = user?.role.name === 'super_admin' || user?.role.name === 'admin';
+  
+  // 更新角色判断
+  const isAgent = ['agent', 'senior_agent'].includes(user?.role);
+  const isAdmin = user?.role === 'admin';
+  const isAdminLogin = user?.login === 'adminayi888';
 
   return (
     <ConfigProvider locale={zhCN}>
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Routes>
-            {/* 登录页面 - 已登录用户重定向到相应界面 */}
+            {/* 登录路由 */}
             <Route 
               path="/login" 
               element={
                 isAuthenticated ? (
                   <Navigate to={
-                    isAdmin ? "/admin/dashboard" : 
+                    isAdminLogin ? "/admin/dashboard" : 
                     isAgent ? "/agent-chat" : 
                     "/admin/dashboard"
                   } replace />
-                ) : (
-                  <Login />
-                )
+                ) : <Login />
               } 
             />
             
-            {/* 游客聊天页面 - 无需登录 */}
-            <Route path="/chat/:agentId" element={<UserChatPage />} />
-            <Route path="/s/:shortId" element={<UserChatPage />} />
+            {/* 公开聊天入口 */}
+            <Route path="/chat/:agentId" element={
+              <UserChatPage 
+                showAgentTools={isAuthenticated && isAgent} 
+              />
+            } />
+            <Route path="/s/:shortId" element={
+              <UserChatPage 
+                showAgentTools={isAuthenticated && isAgent} 
+              />
+            } />
             
             {/* 需要登录的路由 */}
-            <Route path="/" element={<PrivateRoute />}>
-              {/* 管理员专用路由 */}
-              <Route path="/admin" element={<AppLayout />}>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="keys" element={<KeyManagement />} />
+            <Route element={<PrivateRoute />}>
+              {/* 管理员路由 */}
+              {isAdminLogin && (
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="keys" element={<KeyManagement />} />
+                  <Route path="analytics" element={<AnalyticsDashboard />} />
+                </Route>
+              )}
+              
+              {/* 坐席工作台 */}
+              <Route path="/agent-chat" element={
+                isAgent ? <AgentChatLayout /> : <Navigate to="/login" replace />
+              }>
+                <Route index element={<ConversationList />} />
+                <Route path=":conversationId" element={<ChatWindow />} />
               </Route>
               
-              {/* 坐席专用路由 */}
-              <Route 
-                path="/agent-chat" 
-                element={
-                  isAgent ? <AgentChatLayout /> : <Navigate to="/login" replace />
-                } 
-              />
-              <Route 
-                path="/agent-settings" 
-                element={
-                  isAgent ? <AgentSettings /> : <Navigate to="/login" replace />
-                } 
-              />
-              
-              {/* 默认重定向 */}
-              <Route index element={<Navigate to={
-                isAdmin ? "/admin/dashboard" : 
-                isAgent ? "/agent-chat" : 
-                "/login"
-              } replace />} />
+              <Route path="/agent-settings" element={
+                isAgent ? <AgentSettings /> : <Navigate to="/login" replace />
+              } />
             </Route>
             
-            {/* 404和默认重定向 */}
-            <Route path="*" element={
+            {/* 默认重定向 */}
+            <Route index element={
               <Navigate to={
                 isAuthenticated ? (
-                  isAdmin ? "/admin/dashboard" : 
+                  isAdminLogin ? "/admin/dashboard" : 
                   isAgent ? "/agent-chat" : 
-                  "/admin/dashboard"
+                  "/login"
                 ) : "/login"
               } replace />
             } />
+            
+            {/* 404处理 */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       </Router>
